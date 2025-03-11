@@ -19,5 +19,5 @@ cleanup_installer() {
 	rm -rfv /tmp/install-tl-*
 }
 trap cleanup_installer EXIT
-/usr/local/texlive/**/bin/**/tlmgr install collection-latex latexmk latexindent texcount
+/usr/local/texlive/**/bin/**/tlmgr install collection-latex latexmk latexindent texcount gensymb pgfplots pdfpages
 /usr/local/texlive/**/bin/**/tlmgr option autobackup 0
