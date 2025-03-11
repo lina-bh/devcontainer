@@ -24,6 +24,6 @@ jobs:
         with:
           image: ${{ steps.build.outputs.image }}
           tags: ${{ steps.build.outputs.tags }}
-          registry: ghcr.io
+          registry: ghcr.io/${{ github.actor }}
           username: ${{ github.actor }}
           password: ${{ github.token }}
