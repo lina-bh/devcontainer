@@ -1,0 +1,29 @@
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+jobs:
+  build-push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # - uses: redhat-actions/podman-login
+      #   with:
+      #     registry: ghcr.io
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: redhat-actions/buildah-build
+        id: build
+        with:
+          image: devcontainer
+          tags: latest ${{ github.sha }}
+          containerfiles: |
+            ./Containerfile
+          oci: true
+      - uses: redhat-actions/push-to-registry
+        with:
+          image: ${{ steps.build.outputs.image }}
+          tags: ${{ steps.build.outputs.tags }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ github.token }}
