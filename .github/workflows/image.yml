@@ -12,7 +12,7 @@ jobs:
       #     registry: ghcr.io
       #     username: ${{ github.actor }}
       #     password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: redhat-actions/buildah-build
+      - uses: redhat-actions/buildah-build@v2
         id: build
         with:
           image: devcontainer
@@ -20,7 +20,7 @@ jobs:
           containerfiles: |
             ./Containerfile
           oci: true
-      - uses: redhat-actions/push-to-registry
+      - uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build.outputs.image }}
           tags: ${{ steps.build.outputs.tags }}
