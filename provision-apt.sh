@@ -21,4 +21,6 @@ apt-get install --no-install-recommends --fix-broken -y \
 	gnupg \
 	man-db \
 	podman-docker \
+	openssh-client \
+	fish \
 	;

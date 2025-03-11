@@ -1,0 +1,6 @@
+{
+  "image": "ghcr.io/lina-bh/devcontainer:latest",
+  "remoteUser": "1000",
+  // podman
+  "runArgs": ["--userns=keep-id", "--security-opt=label=disable"]
+}
