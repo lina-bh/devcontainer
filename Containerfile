@@ -1,10 +1,11 @@
 ARG BASEIMAGE=docker.io/library/ubuntu:24.04
+ARG TEXLIVE=2025
 
 FROM ${BASEIMAGE} AS tex
 
 RUN apt-get update -y && apt-get install -y --no-install-recommends curl ca-certificates gnupg perl-doc
 
-ARG TEXLIVE=2025
+ARG TEXLIVE
 ARG TEXLIVEMIRROR=https://mirror.ctan.org/sites/ctan.org/systems/texlive/tlnet
 
 COPY ./install.profile ./provision-tl.sh /tmp/
@@ -24,6 +25,7 @@ RUN bash /tmp/provision-nix.sh
 
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/bin/
 
-COPY --from=tex /usr/local/texlive/ /usr/local/
+COPY --from=tex /usr/local/texlive/ /usr/local/texlive
+ARG TEXLIVE
 ENV PATH=/usr/local/texlive/${TEXLIVE}/bin/x86_64-linux:$PATH
 
