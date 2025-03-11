@@ -25,6 +25,8 @@ jobs:
             ./Containerfile
           oci: true
           layers: true
+          build-args: |
+            TEXLIVEMIRROR=${{ vars.TEXLIVEMIRROR }}
       - uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build.outputs.image }}
