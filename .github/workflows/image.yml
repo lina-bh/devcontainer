@@ -24,6 +24,7 @@ jobs:
           containerfiles: |
             ./Containerfile
           oci: true
+          layers: true
       - uses: redhat-actions/push-to-registry@v2
         with:
           image: ${{ steps.build.outputs.image }}
