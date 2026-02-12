@@ -1,0 +1,16 @@
+babel-english
+biber
+biblatex
+csquotes
+epstopdf-pkg
+etoolbox
+fontspec
+geometry
+hyperref
+kvoptions
+kvsetkeys
+latex-bin
+latexmk
+ltxcmds
+parskip
+titlesec
