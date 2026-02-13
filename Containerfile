@@ -71,11 +71,14 @@ RUN --mount=type=cache,target=/var/lib/dnf \
     gcc \
     libxcrypt-compat \
     java-latest-openjdk-headless \
+    helm \
+    helm-diff \
     ${PERL_RPMS}
 
 COPY --from=uv /uv /uvx /usr/local/bin
 COPY --from=opentofu /usr/local/bin/tofu /usr/local/bin/tofu
 COPY --from=ltex_ls_plus /opt/ltex-ls-plus /opt/ltex-ls-plus
+
 COPY --from=texlive /usr/local/texlive /usr/local/texlive
 RUN texlive_path="$(find /usr/local/texlive/ -maxdepth 1 -regex '.+[0-9]+')/bin/$(uname -m)-linux/" && \
     echo "export PATH=\"\${PATH}:${texlive_path}\"" >> /etc/bashrc && \
