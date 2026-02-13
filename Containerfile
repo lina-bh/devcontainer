@@ -72,7 +72,6 @@ RUN --mount=type=cache,target=/var/lib/dnf \
     libxcrypt-compat \
     java-latest-openjdk-headless \
     helm \
-    helm-diff \
     ${PERL_RPMS}
 
 COPY --from=uv /uv /uvx /usr/local/bin
