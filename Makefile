@@ -9,7 +9,7 @@ all: build
 
 .PHONY: build
 build:
-	podman build --rm=false --pull=newer --tag=$(NAME):latest --layers=true --cache-from=$(NAME) --target=$(TARGET) $(EXTRA_BUILD_ARGS) .
+	podman build --rm=false --pull=newer --tag=$(NAME):latest --layers=true --cache-from=$(NAME) --target=$(TARGET) --jobs=2 $(EXTRA_BUILD_ARGS) .
 
 .PHONY: push
 push:
@@ -21,4 +21,4 @@ tag:
 
 .PHONY: run
 run:
-	podman run --rm -it --pull=never $(NAME) -l -
+	podman run --rm -it --pull=never $(NAME)

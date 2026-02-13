@@ -9,6 +9,10 @@ perl-sigtrap \
 
 FROM quay.io/fedora/fedora-toolbox:43 AS base
 
+FROM ghcr.io/astral-sh/uv:latest AS uv
+
+FROM ghcr.io/opentofu/opentofu:minimal AS opentofu
+
 FROM base AS ltex_ls_plus_extract
 
 ARG LTEX_LS_PLUS_RELEASE=18.6.1
@@ -32,9 +36,8 @@ RUN --mount=type=cache,target=/var/lib/dnf \
     --mount=type=cache,target=/var/cache \
     dnf -y --setopt=install_weak_deps=False install ${PERL_RPMS}
 
-RUN (\
-    set -e; \
-    cd /tmp/install-tl-2* && \
+ARG CTAN_MIRROR='https://mirror.ox.ac.uk/sites/ctan.org'
+RUN cd /tmp/install-tl-2* && \
     TEXLIVE_INSTALL_ENV_NOCHECK=1 \
     TEXLIVE_INSTALL_NO_WELCOME=1 \
     perl ./install-tl \
@@ -44,10 +47,11 @@ RUN (\
     --no-interaction \
     --paper=a4 \
     --scheme=scheme-infraonly \
-)
+    --repository="${CTAN_MIRROR}/systems/texlive/tlnet"
 
-COPY ./ctan /tmp/ctan
-RUN "$(find /usr/local/texlive -maxdepth 1 -regex '.+[0-9]+')/bin/$(uname -m)-linux/tlmgr" install $(cat /tmp/ctan)
+COPY ./build_files/ctan /tmp/ctan
+RUN "$(find /usr/local/texlive -maxdepth 1 -regex '.+[0-9]+')/bin/$(uname -m)-linux/tlmgr" install $(cat /tmp/ctan) && \
+    "$(find /usr/local/texlive -maxdepth 1 -regex '.+[0-9]+')/bin/$(uname -m)-linux/tlmgr" option repository http://mirror.ctan.org/systems/texlive/tlnet
 
 FROM scratch AS texlive
 
@@ -55,21 +59,13 @@ COPY --from=texlive_install /usr/local/texlive /usr/local/texlive
 
 FROM base AS toolbox
 
-COPY --from=ltex_ls_plus /opt/ltex-ls-plus /opt/ltex-ls-plus
-
-COPY --from=texlive /usr/local/texlive /usr/local/texlive
-RUN (\
-    set -e; \
-    texlive_path="$(find /usr/local/texlive/ -maxdepth 1 -regex '.+[0-9]+')/bin/$(uname -m)-linux/" && \
-    echo "export PATH=\"\${PATH}:${texlive_path}\"" >> /etc/bashrc && \
-    echo "Defaults secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${texlive_path}\"" > /etc/sudoers.d/texlive && \
-    :)
+RUN echo "export PATH=\"${HOME}/.local/bin:\${PATH}\"" >> /etc/bashrc
 
 ARG PERL_RPMS
 RUN --mount=type=cache,target=/var/lib/dnf \
     --mount=type=cache,target=/var/cache/libdnf5 \
     --mount=type=tmpfs,target=/var/log \
-    dnf -y copr enable petersen/nix && \
+    dnf -y copr enable petersen/nix >/dev/null && \
     dnf -y install \
     zsh \
     gcc \
@@ -77,7 +73,13 @@ RUN --mount=type=cache,target=/var/lib/dnf \
     java-latest-openjdk-headless \
     ${PERL_RPMS}
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /usr/local/bin
+COPY --from=uv /uv /uvx /usr/local/bin
+COPY --from=opentofu /usr/local/bin/tofu /usr/local/bin/tofu
+COPY --from=ltex_ls_plus /opt/ltex-ls-plus /opt/ltex-ls-plus
+COPY --from=texlive /usr/local/texlive /usr/local/texlive
+RUN texlive_path="$(find /usr/local/texlive/ -maxdepth 1 -regex '.+[0-9]+')/bin/$(uname -m)-linux/" && \
+    echo "export PATH=\"\${PATH}:${texlive_path}\"" >> /etc/bashrc && \
+    echo "Defaults secure_path = \"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:${texlive_path}\"" > /etc/sudoers.d/texlive
 
 RUN hardlink --respect-xattrs --ignore-time --mount /usr /opt
 
@@ -88,5 +90,7 @@ RUN useradd -mUG wheel -s /bin/bash -u 1000 -d /home/vscode vscode && \
 
 USER 1000
 
-# RUN (curl -fsSL https://sh.rustup.rs | \
-#     sh -s -- -y --profile minimal -c rustfmt,rust-analyzer --no-modify-path)
+RUN uv python install
+
+RUN (curl -fsSL https://sh.rustup.rs | \
+    sh -s -- -y --profile minimal -c rustfmt,rust-analyzer --no-modify-path)
