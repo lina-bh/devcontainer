@@ -19,6 +19,15 @@ push:
 tag:
 	podman tag $(NAME):latest $(NAME):$(TAG)
 
+.PHONY:
+tag_HEAD:
+	$(MAKE) tag TAG=$(shell git rev-parse HEAD)
+
+.PHONY:
+push_HEAD: tag_HEAD
+	$(MAKE) push TAG=$(shell git rev-parse HEAD)
+
+
 .PHONY: run
 run:
 	podman run --rm -it --pull=never $(NAME)
