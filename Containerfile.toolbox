@@ -10,7 +10,11 @@ ARG FLUX_RELEASE=2.7.5
 
 FROM quay.io/fedora/fedora-toolbox:43 AS base
 
-FROM ghcr.io/fluxcd/flux-cli:v${FLUX_RELEASE} AS flux
+FROM ghcr.io/fluxcd/flux-cli:v${FLUX_RELEASE} AS flux_cli
+
+FROM scratch AS flux
+
+COPY --from=flux_cli /usr/local/bin/flux /flux
 
 FROM ghcr.io/astral-sh/uv:latest AS uv
 
@@ -80,7 +84,7 @@ RUN --mount=type=cache,target=/var/lib/dnf \
 
 COPY --from=uv /uv /uvx /usr/local/bin
 COPY --from=opentofu /usr/local/bin/tofu /usr/local/bin/tofu
-COPY --from=flux /usr/local/bin/flux /usr/local/bin/flux
+COPY --from=flux /flux /usr/local/bin/flux
 COPY --from=ltex_ls_plus /opt/ltex-ls-plus /opt/ltex-ls-plus
 
 COPY --from=texlive /usr/local/texlive /usr/local/texlive
