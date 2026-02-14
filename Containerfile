@@ -13,6 +13,16 @@ FROM ghcr.io/astral-sh/uv:latest AS uv
 
 FROM ghcr.io/opentofu/opentofu:minimal AS opentofu
 
+FROM base AS flux_download
+
+ARG FLUX_RELEASE=2.7.5
+COPY ./build_files/flux.sh /tmp/flux.sh
+RUN env FLUX_RELEASE=${FLUX_RELEASE} bash /tmp/flux.sh
+
+FROM scratch AS flux
+
+COPY --from=flux_download /flux /flux
+
 FROM base AS ltex_ls_plus_extract
 
 ARG LTEX_LS_PLUS_RELEASE=18.6.1
@@ -72,6 +82,7 @@ RUN --mount=type=cache,target=/var/lib/dnf \
     libxcrypt-compat \
     java-latest-openjdk-headless \
     helm \
+    'kubernetes1.35-client' \
     ${PERL_RPMS}
 
 COPY --from=uv /uv /uvx /usr/local/bin
