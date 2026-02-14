@@ -1,0 +1,12 @@
+ARG TAG=latest
+FROM ghcr.io/lina-bh/toolbox:${TAG}
+
+RUN useradd -mUG wheel -s /bin/bash -u 1000 -d /home/vscode vscode && \
+    echo '#1000 ALL = NOPASSWD: ALL' > /etc/sudoers.d/vscode
+
+USER 1000
+
+RUN uv python install
+
+RUN (curl -fsSL https://sh.rustup.rs | \
+    sh -s -- -y --profile minimal -c rustfmt,rust-analyzer --no-modify-path)
