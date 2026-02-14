@@ -1,33 +1,36 @@
-NAME := ghcr.io/lina-bh/toolbox
-TAG := latest
-CONTAINERFILE := Containerfile.toolbox
+.POSIX:
+.EXPORT_ALL_VARIABLES:
 
+REGISTRY := ghcr.io/lina-bh
+TARGET := toolbox
+DOCKER := buildah
 EXTRA_BUILD_ARGS :=
 
+NAME := $(REGISTRY)/$(TARGET)
+TAG := $(shell git diff-index --quiet HEAD -- && git rev-parse HEAD || printf 'latest')
+
 .PHONY: all
-all: build
+all:
 
 .PHONY: build
 build:
-	podman build --rm=false --pull=newer --tag=$(NAME):latest --layers=true --cache-from=$(NAME) --file=$(CONTAINERFILE) $(EXTRA_BUILD_ARGS) .
+	$(DOCKER) build --rm=false --pull=newer --tag=$(NAME):latest --layers=true --cache-from=$(NAME) --file=Containerfile.$(TARGET) $(EXTRA_BUILD_ARGS) .
+	$(DOCKER) tag $(NAME):latest $(NAME):$(TAG)
 
 .PHONY: push
 push:
-	podman push --format=oci $(NAME):$(TAG)
+	$(DOCKER) push --format=oci $(NAME):$(TAG)
+	$(DOCKER) push --format=oci $(NAME):latest
 
-.PHONY: tag
-tag:
-	podman tag $(NAME):latest $(NAME):$(TAG)
+.PHONY: ci
+ci:
+	$(MAKE) build push TARGET=toolbox
+	$(MAKE) build push TARGET=devcontainer EXTRA_BUILD_ARGS='$(EXTRA_BUILD_ARGS) --build-arg=TAG=$(TAG)'
 
-.PHONY:
-tag_HEAD:
-	$(MAKE) tag TAG=$(shell git rev-parse HEAD)
+.PHONY: toolbox
+toolbox:
+	$(MAKE) build TARGET=toolbox
 
-.PHONY:
-push_HEAD: tag_HEAD
-	$(MAKE) push TAG=$(shell git rev-parse HEAD)
-
-
-.PHONY: run
-run:
-	podman run --rm -it --pull=never $(NAME)
+.PHONY: devcontainer
+devcontainer:
+	$(MAKE) build TARGET=devcontainer EXTRA_BUILD_ARGS='$(EXTRA_BUILD_ARGS) --build-arg=TAG=$(TAG)'
