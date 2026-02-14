@@ -77,7 +77,6 @@ RUN --mount=type=cache,target=/var/lib/dnf \
     --mount=type=tmpfs,target=/var/log \
     dnf -y copr enable petersen/nix >/dev/null && \
     dnf -y install \
-    zsh \
     gcc \
     libxcrypt-compat \
     java-latest-openjdk-headless \
@@ -87,6 +86,7 @@ RUN --mount=type=cache,target=/var/lib/dnf \
 
 COPY --from=uv /uv /uvx /usr/local/bin
 COPY --from=opentofu /usr/local/bin/tofu /usr/local/bin/tofu
+COPY --from=flux /flux /usr/local/bin/flux
 COPY --from=ltex_ls_plus /opt/ltex-ls-plus /opt/ltex-ls-plus
 
 COPY --from=texlive /usr/local/texlive /usr/local/texlive
