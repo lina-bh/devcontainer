@@ -77,6 +77,7 @@ RUN --mount=type=cache,target=/var/lib/dnf \
     --mount=type=tmpfs,target=/var/log \
     dnf -y copr enable petersen/nix >/dev/null && \
     dnf -y install \
+    zsh \
     gcc \
     libxcrypt-compat \
     java-latest-openjdk-headless \
