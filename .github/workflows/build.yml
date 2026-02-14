@@ -5,6 +5,8 @@ on:
   schedule:
     - cron: "0 0 1,15 * *" # midnight on the 1st and 15th
   workflow_dispatch:
+concurrency:
+  group: ${{ github.workflow }}
 jobs:
   build:
     name: Build and push
@@ -12,11 +14,6 @@ jobs:
     permissions:
       contents: read
       packages: write
-    strategy:
-      matrix:
-        target:
-          - devcontainer
-          - toolbox
     env:
       REGISTRY: ghcr.io/${{ github.repository_owner }}
       NAME: ghcr.io/${{ github.repository_owner }}/${{ matrix.target }}
@@ -28,9 +25,15 @@ jobs:
         password: ${{ github.token }}
         registry: ${{ env.REGISTRY }}
     - uses: actions/checkout@v4
-    - name: Build ghcr.io/${{ github.repository }}:latest
-      run: make build NAME=${{ env.NAME }} TARGET=${{ matrix.target }} EXTRA_BUILD_ARGS='--label=org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }} --build-arg=CTAN_MIRROR=http://mirror.ctan.org'
+    - name: Build toolbox
+      run: make build NAME=${{ env.REGISTRY }}/toolbox CONTAINERFILE=Containerfile.toolbox EXTRA_BUILD_ARGS='--label=org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }} --build-arg=CTAN_MIRROR=http://mirror.ctan.org'
     - name: Push latest
-      run: make push NAME=${{ env.NAME }}
+      run: make push NAME=${{ env.REGISTRY }}/toolbox
     - name: Push ${{ github.sha }}
-      run: make push_HEAD NAME=${{ env.NAME }}
+      run: make push_HEAD NAME=${{ env.REGISTRY }}/toolbox
+    - name: Build devcontainer
+      run: make build NAME=${{ env.REGISTRY }}/devcontainer CONTAINERFILE=Containerfile.devcontainer EXTRA_BUILD_ARGS="--label=org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }} --build-arg=TAG=$(git rev-parse HEAD)"
+    - name: Push latest
+      run: make push NAME=${{ env.REGISTRY }}/devcontainer
+    - name: Push ${{ github.sha }}
+      run: make push_HEAD NAME=${{ env.REGISTRY }}/devcontainer
